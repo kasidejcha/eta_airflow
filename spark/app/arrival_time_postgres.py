@@ -23,7 +23,8 @@ concat_arrival_file = sys.argv[5]
 
 df_arrival = (spark.read.format('csv')
               .option("header", True)
-             .load(arrival_files))
+             .load(arrival_files))  
+             
 
 df_arrival = df_arrival.orderBy(df_arrival.time.asc())
 

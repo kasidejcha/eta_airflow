@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 from airflow.operators import BashOperator
 
@@ -19,7 +20,6 @@ now = datetime.now()
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
-    "start_date": datetime(now.year, now.month, now.day),
     "email": ["airflow@airflow.com"],
     "email_on_failure": False,
     "email_on_retry": False,
@@ -28,19 +28,27 @@ default_args = {
 }
 
 dag = DAG(
-        dag_id="Arrival_Time_Preprocess_4-1", 
+        dag_id="Arrival_Time_Preprocess_1-4_4-23E_1-77_daily", 
         description="Arrival Time Preprocess",
         default_args=default_args, 
-        schedule_interval=timedelta(days=1)
+        start_date = days_ago(1),
+        schedule_interval='0 2 * * *', # 9am bangkok time
+        max_active_runs=1,
+        catchup=False
     )
-
 
 
 arrival_time = BashOperator(
     task_id = 'arrival_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline.py --month m05 --route_num "4-1(6)"',
+    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_multiroute_daily_schedule.py --route_num_01 "1-4(39)" --route_num_02 "4-23E(140)" --route_num_03 "1-77(26ก.)"',
+    dag = dag
+)
+#  '1-4(39)', '4-23E(140)', '1-77(26ก.)'
+
+link_time = BashOperator(
+    task_id = 'link_time',
+    bash_command = 'python /usr/local/spark/app/pipeline_scripts/link_time_postgres.py --route_num_01 "1-4(39)" --route_num_02 "4-23E(140)" --route_num_03 "1-77(26ก.)"',
     dag = dag
 )
 
-
-arrival_time
+arrival_time >> link_time
