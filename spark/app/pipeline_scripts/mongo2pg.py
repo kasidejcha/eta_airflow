@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 import numpy as np
 from datetime import datetime, timedelta
+import pickle
 
 myclient = pymongo.MongoClient(r"mongodb://tsb-ro:TSB%23ro2022@147.50.147.213:27017/?directConnection=true&authMechanism=DEFAULT&authSource=tsb-fleet")
 mydb = myclient["tsb-fleet"]
@@ -14,6 +15,11 @@ mycol = mydb.locations
 
 today = datetime.now() # datetime utc
 yesterday = datetime.now() - timedelta(days=1)
+
+today_date = today.strftime('%Y-%m-%d')
+file_path = '/home/ea_admin/Documents/spark/airflow-spark/spark/resources/data/current_gps_date/date.pkl'
+with open(file_path, "wb") as file:
+    pickle.dump(today_date, file)
 
 from_date = datetime(yesterday.year, yesterday.month, yesterday.day,17, 0, 0)
 to_date = datetime(today.year, today.month, today.day, 16, 59, 59)
@@ -57,7 +63,8 @@ df.reset_index(drop=True, inplace=True)
 after_drop_len = len(df)
 df = df.fillna('')
 print(f"Date {from_date} Drop length: {before_drop_len - after_drop_len}")
-# df.to_csv('2022-12-19.csv', index=False, encoding='utf-8-sig')
+df.to_csv('tmp_gps.csv', index=False, encoding='utf-8-sig')
+df = pd.read_csv('tmp_gps.csv')
 
 engine = create_engine("postgresql://admin:admin@192.168.14.91:5432/eta")
 

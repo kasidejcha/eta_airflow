@@ -32,7 +32,7 @@ dag = DAG(
         description="Arrival Time Preprocess",
         default_args=default_args, 
         start_date = days_ago(1),
-        schedule_interval='0 2 * * *', # 9am bangkok time
+        schedule_interval='0 4 * * *', # 9am bangkok time
         max_active_runs=1,
         catchup=False
     )

@@ -1,21 +1,17 @@
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 from airflow.operators import BashOperator
+from airflow.utils.dates import days_ago
 
 ###############################################
 # Parameters
 ###############################################
-postgres_driver_jar = "/usr/local/spark/resources/jars/postgresql-9.4.1207.jar"
-postgres_db = "jdbc:postgresql://postgres/test"
-postgres_user = "test"
-postgres_pwd = "postgres"
+
 
 ###############################################
 # DAG Definition
 ###############################################
-now = datetime.now()
 
 default_args = {
     "owner": "airflow",
@@ -28,27 +24,32 @@ default_args = {
 }
 
 dag = DAG(
-        dag_id="Arrival_Time_Preprocess_1-3_daily", 
+        dag_id="import_daily_gps_data",
         description="Arrival Time Preprocess",
-        default_args=default_args, 
+        default_args=default_args,
         start_date = days_ago(1),
-        schedule_interval='0 4 * * *',
+        schedule_interval='15 17 * * *',
         max_active_runs=1,
         catchup=False
     )
 
-
-arrival_time = BashOperator(
-    task_id = 'arrival_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_multiroute_daily_schedule.py --route_num_01 "1-3(34)"',
+mongo2pg = BashOperator(
+    task_id = 'mongo2pg',
+    bash_command = 'python /usr/local/spark/app/pipeline_scripts/mongo2pg.py',
     dag = dag
 )
+
+pg2csv = BashOperator(
+    task_id = 'pg2csv',
+    bash_command = f'python /usr/local/spark/app/pipeline_scripts/pg2csv.py',
+    dag = dag
+)
+
+# arrival_time = BashOperator(
+#     task_id = 'arrival_time',
+#     bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_multiroute_daily_schedule.py --route_num_01 "1-3(34)"',
+#     dag = dag
+# )
 #  '1-3(34)'
 
-link_time = BashOperator(
-    task_id = 'link_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/link_time_postgres.py --route_num_01 "1-3(34)"',
-    dag = dag
-)
-
-arrival_time >> link_time
+mongo2pg >> pg2csv

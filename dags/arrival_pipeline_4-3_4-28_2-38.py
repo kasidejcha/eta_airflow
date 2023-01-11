@@ -38,7 +38,7 @@ dag = DAG(
 
 arrival_time = BashOperator(
     task_id = 'arrival_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_multiroute_daily.py --route_num_01 "4-3(17)" --route_num_02 "4-28(529)" --route_num_03 "2-38(8)"',
+    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_multiroute_batch_m12.py --route_num_01 "4-3(17)" --route_num_02 "4-28(529)" --route_num_03 "2-38(8)"',
     dag = dag
 )
 

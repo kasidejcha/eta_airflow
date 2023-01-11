@@ -7,12 +7,12 @@ from glob import glob
 import os
 warnings.filterwarnings("ignore")
 from datetime import datetime, timedelta
-
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 def get_parameters():
     parser = argparse.ArgumentParser(description='Arrival_preprocessing')
-    parser.add_argument('--route_path', type=str, default='/usr/local/spark/resources/data/routes/routes.csv', help='path to route file')
-    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_30-11-22.csv', help='path to vehicle file')
+    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_2023-01-11.csv', help='path to vehicle file')
     parser.add_argument('--route_num_01', type=str, default= None, help='route number')
     parser.add_argument('--route_num_02', type=str, default= None, help='route number')
     parser.add_argument('--route_num_03', type=str, default= None, help='route number')
@@ -23,7 +23,14 @@ def get_parameters():
 args = get_parameters()
 
 # inputs
-routes = pd.read_csv(args.route_path)
+engine = create_engine("postgresql://divine:dv123456@192.168.242.73:5432/tsb")
+query = """
+select *
+from stations_gb
+"""
+routes = pd.read_sql(query, engine).drop('distance_km', axis=1)
+routes.rename(columns={'Route':'routes', 'Direction':'direction', 'Latitude':'lat', 'Longitude':'lon'}, inplace=True)
+
 vehicles = pd.read_csv(args.vehicle_path)
 
 # init
@@ -47,14 +54,14 @@ hour_56 = 1.5
 hour_35 = 2.5
 hour_80 = 2.0
 
-vender = 'sit'
+vender = 'thai-star'
 # yesterday = datetime.now() - timedelta(days=1)
 # yesterday = yesterday.strftime('%Y-%m-%d')
 
 
-days = ['05']
+days = ['12']
 for day in days:
-    yesterday = f'2023-01-{day}'
+    yesterday = f'2022-12-{day}'
     input_file_path = f'/usr/local/spark/resources/data/gps/{vender}_gps_{yesterday}.csv'
     gps_files = [input_file_path]
     for gps_file in gps_files:
@@ -63,7 +70,7 @@ for day in days:
         date = yesterday
         
         # Create output folder
-        gps_file_path = f'/usr/local/spark/resources/data/arrival/{date}/arrival_time/'
+        gps_file_path = f'/usr/local/spark/resources/data/arrival_thaistar/{date}/arrival_time/'
         isExist = os.path.exists(gps_file_path)
         if not isExist:
             os.makedirs(gps_file_path)
@@ -75,7 +82,7 @@ for day in days:
                 time_hour = hour_56
             elif route_num == '4-1(6)':
                 time_hour = hour_6
-            elif route_num == '4-44(80ก.)':
+            elif route_num == '4-44(80)':
                 time_hour = hour_80
             else:
                 time_hour = 2.5

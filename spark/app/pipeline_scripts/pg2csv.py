@@ -4,8 +4,18 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 import time
 from glob import glob
 from datetime import datetime, timedelta
+import argparse
+import pickle
+
+def get_parameters():
+    parser = argparse.ArgumentParser(description='Arrival_preprocessing')
+    parser.add_argument('--date', type=str, default='2023-01-05', help='path to route file')
+    args = parser.parse_args()
+    return args
+
 
 # init
+args = get_parameters()
 route_path = '/usr/local/spark/resources/data/routes/routes.csv'
 vehicle_path = '/usr/local/spark/resources/data/vehicles/vehicles_30-11-22.csv'
 vender = 'sit'
@@ -17,9 +27,13 @@ all_route_list = route.routes.unique().tolist()
 engine = create_engine("postgresql://admin:admin@192.168.14.91:5432/eta")
 
 
-date = datetime.now()
-date = date.strftime('%Y-%m-%d')
+# date = datetime.now()
+# date = date.strftime('%Y-%m-%d')
 # date = '2022-12-21'
+file_path = '/home/ea_admin/Documents/spark/airflow-spark/spark/resources/data/current_gps_date/date.pkl'
+with open(file_path, "rb") as file:
+    loaded_string = pickle.load(file)
+date = loaded_string
 
 start_time = time.time()
 query = f"""
@@ -33,7 +47,7 @@ select
     engine_status
 from gps_log
 where (utc_ts + INTERVAL '7 hour')::date = '{date}' and engine_status = 1 and data_from = '{vender}'
-order by utc_ts
+order by datetime_gps
 """
 gps = pd.read_sql(query, con=engine)
 
