@@ -17,7 +17,7 @@ today = datetime.now() # datetime utc
 yesterday = datetime.now() - timedelta(days=1)
 
 today_date = today.strftime('%Y-%m-%d')
-file_path = '/home/ea_admin/Documents/spark/airflow-spark/spark/resources/data/current_gps_date/date.pkl'
+file_path = '/usr/local/spark/resources/data/current_gps_date/date.pkl'
 with open(file_path, "wb") as file:
     pickle.dump(today_date, file)
 

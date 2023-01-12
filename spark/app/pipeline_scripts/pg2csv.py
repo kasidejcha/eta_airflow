@@ -30,7 +30,7 @@ engine = create_engine("postgresql://admin:admin@192.168.14.91:5432/eta")
 # date = datetime.now()
 # date = date.strftime('%Y-%m-%d')
 # date = '2022-12-21'
-file_path = '/home/ea_admin/Documents/spark/airflow-spark/spark/resources/data/current_gps_date/date.pkl'
+file_path = '/usr/local/spark/resources/data/current_gps_date/date.pkl'
 with open(file_path, "rb") as file:
     loaded_string = pickle.load(file)
 date = loaded_string
