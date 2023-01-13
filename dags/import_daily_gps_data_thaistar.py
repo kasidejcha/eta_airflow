@@ -2,24 +2,20 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime, timedelta
 from airflow.operators import BashOperator
+from airflow.utils.dates import days_ago
 
 ###############################################
 # Parameters
 ###############################################
-postgres_driver_jar = "/usr/local/spark/resources/jars/postgresql-9.4.1207.jar"
-postgres_db = "jdbc:postgresql://postgres/test"
-postgres_user = "test"
-postgres_pwd = "postgres"
+
 
 ###############################################
 # DAG Definition
 ###############################################
-now = datetime.now()
 
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
-    "start_date": datetime(now.year, now.month, now.day),
     "email": ["airflow@airflow.com"],
     "email_on_failure": False,
     "email_on_retry": False,
@@ -28,19 +24,27 @@ default_args = {
 }
 
 dag = DAG(
-        dag_id="Arrival_Time_Preprocess_thaistar_2-26_2-13_1-1",
+        dag_id="import_daily_gps_data_thaistar",
         description="Arrival Time Preprocess",
-        default_args=default_args, 
-        schedule_interval='@once'
+        default_args=default_args,
+        start_date = days_ago(1),
+        schedule_interval='0 3 * * *',
+        max_active_runs=1,
+        catchup=False
     )
 
 
-
-arrival_time = BashOperator(
-    task_id = 'arrival_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_thaistar_daily.py --route_num_01 "2-26(545)" --route_num_02 "2-13(69)" --route_num_03 "1-1(29)"',
+pg2csv = BashOperator(
+    task_id = 'pg2csv',
+    bash_command = f'python /usr/local/spark/app/pipeline_scripts/pg2csv_thaistar.py',
     dag = dag
 )
 
+# arrival_time = BashOperator(
+#     task_id = 'arrival_time',
+#     bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_multiroute_daily_schedule.py --route_num_01 "1-3(34)"',
+#     dag = dag
+# )
+#  '1-3(34)'
 
-arrival_time
+pg2csv

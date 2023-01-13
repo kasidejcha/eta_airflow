@@ -28,19 +28,24 @@ default_args = {
 }
 
 dag = DAG(
-        dag_id="Arrival_Time_Preprocess_thaistar_S2_4-51_4-50",
+        dag_id="Arrival_Time_Preprocess_thaistar_3-15_4-21_2-35_daily",
         description="Arrival Time Preprocess",
-        default_args=default_args, 
-        schedule_interval='@once'
+        default_args=default_args,
+        schedule_interval='0 4 * * *'
     )
-
 
 
 arrival_time = BashOperator(
     task_id = 'arrival_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_thaistar_daily.py --route_num_01 "S2(554)" --route_num_02 "4-51(124)" --route_num_03 "4-50(123)"',
+    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_thaistar_daily.py --route_num_01 "3-15(133)" --route_num_02 "4-21(120)" --route_num_03 "2-35(110)"',
     dag = dag
 )
 
 
-arrival_time
+link_time = BashOperator(
+    task_id = 'link_time',
+    bash_command = 'python /usr/local/spark/app/pipeline_scripts/link_time_postgres.py --route_num_01 "3-15(133)" --route_num_02 "4-21(120)" --route_num_03 "2-35(110)"',
+    dag = dag
+)
+
+arrival_time >> link_time
