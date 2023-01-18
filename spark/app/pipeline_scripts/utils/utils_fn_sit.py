@@ -320,6 +320,12 @@ def find_closest_distance(start, end, k, route_lat_lon, gps_data, gps_data_lat_l
         for j in range(len(stations)):
             if df.station_lat.iloc[i] == stations.lat.iloc[j] and df.station_long.iloc[i] == stations.long.iloc[j]:
                 station_list.append(stations.station_num.iloc[j])
+    # debug
+    # print('length df:', len(df))
+    # print('length station_num:', len(station_list))
+    # print(df.head())
+    # print(station_list)
+
     df['station_num'] = station_list
     max_station_index = df[df.station_num == max(df['station_num'])].index[-1]
     df = df[df.index <= max_station_index]

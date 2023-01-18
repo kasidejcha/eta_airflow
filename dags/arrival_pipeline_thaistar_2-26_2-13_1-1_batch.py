@@ -24,11 +24,11 @@ default_args = {
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 1,
-    "retry_delay": timedelta(minutes=30)
+    "retry_delay": timedelta(minutes=1)
 }
 
 dag = DAG(
-        dag_id="Arrival_Time_Preprocess_4-3_4-28_2-38_m09", 
+        dag_id="Arrival_Time_Preprocess_thaistar_2-26_2-13_1-1_batch",
         description="Arrival Time Preprocess",
         default_args=default_args, 
         schedule_interval='@once'
@@ -38,9 +38,10 @@ dag = DAG(
 
 arrival_time = BashOperator(
     task_id = 'arrival_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_multiroute_daily_m09.py --route_num_01 "4-3(17)" --route_num_02 "4-28(529)" --route_num_03 "2-38(8)"',
+    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_thaistar_batch.py --route_num_01 "2-26(545)" --route_num_02 "2-13(69)" --route_num_03 "1-1(29)"',
     dag = dag
 )
+
 
 
 arrival_time

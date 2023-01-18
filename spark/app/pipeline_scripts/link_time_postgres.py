@@ -24,13 +24,13 @@ route_num_list = list(filter(lambda x: x is not None, route_num_list)) # drop No
 yesterday = datetime.now() - timedelta(days=1)
 yesterday = yesterday.strftime('%Y-%m-%d')
 
-gps_file_path = f'/usr/local/spark/resources/data/arrival/{yesterday}/arrival_time/'
+gps_file_path = f'/usr/local/spark/resources/data/arrival_thaistar/{yesterday}/arrival_time/'
 # gps_file_path = f'/home/ea_admin/Documents/spark/airflow-spark/spark/resources/data/arrival/{yesterday}/arrival_time/'
 gps_files = os.listdir(gps_file_path)
 gps_files = [gps_files[i] for i, s in enumerate(gps_files) if s.split('_')[1] in route_num_list]
 # print(gps_files)
 
-link_file_path = f'/usr/local/spark/resources/data/arrival/{yesterday}/link_time/'
+link_file_path = f'/usr/local/spark/resources/data/arrival_thaistar/{yesterday}/link_time/'
 # link_file_path = f'/home/ea_admin/Documents/spark/airflow-spark/spark/resources/data/arrival/{yesterday}/link_time/'
 isExist = os.path.exists(link_file_path)
 if not isExist:
@@ -105,8 +105,8 @@ for arrival_file in gps_files:
         # upload to postgresql
         engine = create_engine("postgresql://admin:admin@192.168.14.91:5432/eta")
         db = scoped_session(sessionmaker(bind=engine))
-        link.to_sql('link_time', engine, if_exists='append', index=False)
-        d.to_sql('arrival_time', engine, if_exists='append', index=False)
+        link.to_sql('link_time_thaistar', engine, if_exists='append', index=False)
+        d.to_sql('arrival_time_thaistar', engine, if_exists='append', index=False)
         db.commit()
 
 

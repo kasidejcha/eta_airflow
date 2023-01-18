@@ -105,8 +105,8 @@ for arrival_file in gps_files:
         # upload to postgresql
         engine = create_engine("postgresql://admin:admin@192.168.14.91:5432/eta")
         db = scoped_session(sessionmaker(bind=engine))
-        link.to_sql('link_time_thaistar', engine, if_exists='append', index=False)
-        d.to_sql('arrival_time_thaistar', engine, if_exists='append', index=False)
+        link.to_sql('link_time', engine, if_exists='append', index=False)
+        d.to_sql('arrival_time', engine, if_exists='append', index=False)
         db.commit()
 
 
