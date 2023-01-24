@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime, timedelta
 from airflow.operators import BashOperator
-
+from airflow.utils.dates import days_ago
 ###############################################
 # Parameters
 ###############################################
@@ -19,7 +19,6 @@ now = datetime.now()
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
-    "start_date": datetime(now.year, now.month, now.day),
     "email": ["airflow@airflow.com"],
     "email_on_failure": False,
     "email_on_retry": False,
@@ -29,6 +28,7 @@ default_args = {
 
 dag = DAG(
         dag_id="Arrival_Time_Preprocess_thaistar_1-44_4-25__3-11_daily",
+        start_date = days_ago(1),
         description="Arrival Time Preprocess",
         default_args=default_args, 
         schedule_interval='0 4 * * *'

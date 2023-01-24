@@ -60,11 +60,11 @@ vender = 'thai-star'
 # yesterday = yesterday.strftime('%Y-%m-%d')
 
 
-days = np.arange(1,32)
+days = np.arange(1,16)
 for day in days:
     if day < 10:
         day = f'0{day}'
-    yesterday = f'2022-12-{day}'
+    yesterday = f'2023-01-{day}'
     print(yesterday)
     input_file_path = f'/usr/local/spark/resources/data/gps/{vender}_gps_{yesterday}.csv'
     gps_files = [input_file_path]
@@ -84,8 +84,6 @@ for day in days:
             print("route_num:", route_num)
             if route_num == '4-40(56)':
                 time_hour = hour_56
-            elif route_num == '4-1(6)':
-                time_hour = hour_6
             elif route_num == '4-44(80)':
                 time_hour = hour_80
             else:

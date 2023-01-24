@@ -48,7 +48,6 @@ route_num_list = list(filter(lambda x: x is not None, route_num_list)) # drop No
 
 
 path_list = ['G','B']
-hour_6 = 1.2
 hour_133 = 2.5
 hour_56 = 1.5
 hour_35 = 2.5
@@ -57,7 +56,7 @@ hour_80 = 2.0
 vender = 'thai-star'
 yesterday = datetime.now() - timedelta(days=1)
 yesterday = yesterday.strftime('%Y-%m-%d')
-
+print(yesterday)
 
 # days = ['12']
 # for day in days:
@@ -80,8 +79,6 @@ for gps_file in gps_files:
         print("route_num:", route_num)
         if route_num == '4-40(56)':
             time_hour = hour_56
-        elif route_num == '4-1(6)':
-            time_hour = hour_6
         elif route_num == '4-44(80)':
             time_hour = hour_80
         else:

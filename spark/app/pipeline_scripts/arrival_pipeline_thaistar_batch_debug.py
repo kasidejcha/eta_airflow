@@ -13,7 +13,7 @@ import numpy as np
 
 def get_parameters():
     parser = argparse.ArgumentParser(description='Arrival_preprocessing')
-    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_2023-01-11.csv', help='path to vehicle file')
+    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_2023-01-16.csv', help='path to vehicle file')
     parser.add_argument('--route_num_01', type=str, default= None, help='route number')
     parser.add_argument('--route_num_02', type=str, default= None, help='route number')
     parser.add_argument('--route_num_03', type=str, default= None, help='route number')
@@ -60,11 +60,11 @@ vender = 'thai-star'
 # yesterday = yesterday.strftime('%Y-%m-%d')
 
 
-days = [1]
+days = [16]
 for day in days:
     if day < 10:
         day = f'0{day}'
-    yesterday = f'2022-12-{day}'
+    yesterday = f'2023-01-{day}'
     print(yesterday)
     input_file_path = f'/usr/local/spark/resources/data/gps/{vender}_gps_{yesterday}.csv'
     gps_files = [input_file_path]
@@ -79,18 +79,18 @@ for day in days:
         if not isExist:
             os.makedirs(gps_file_path)
             print("The new directory is created!")
-        route_num_list = ['4-25(147)']
+        route_num_list = ['4-1(6)']
         for route_num in route_num_list:
             print("route_num:", route_num)
             if route_num == '4-40(56)':
                 time_hour = hour_56
-            elif route_num == '4-1(6)':
-                time_hour = hour_6
             elif route_num == '4-44(80)':
                 time_hour = hour_80
             else:
                 time_hour = 2.5
 
+            # debug
+            path_list = ['G']
             for path in path_list:
                 print("path:", path)
                 route_lat_lon, station_num = find_route(routes, route_num, path)
@@ -101,9 +101,7 @@ for day in days:
                 num_cars = len(vehicles[vehicles.route == str(route_num)])
                 print('number of cars:', num_cars)
 
-                # debug
-                car_num_list = [6]
-                for car_no in card_num_list:
+                for car_no in range(num_cars):
                     start_time = time.time()
                     print("route_num:", route_num)
                     print("path:", path)
