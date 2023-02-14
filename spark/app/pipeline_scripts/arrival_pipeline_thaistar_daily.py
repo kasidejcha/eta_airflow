@@ -12,7 +12,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 def get_parameters():
     parser = argparse.ArgumentParser(description='Arrival_preprocessing')
-    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_2023-01-11.csv', help='path to vehicle file')
+    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_2023-01-16.csv', help='path to vehicle file')
     parser.add_argument('--route_num_01', type=str, default= None, help='route number')
     parser.add_argument('--route_num_02', type=str, default= None, help='route number')
     parser.add_argument('--route_num_03', type=str, default= None, help='route number')

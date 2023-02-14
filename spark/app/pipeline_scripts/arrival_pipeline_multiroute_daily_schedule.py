@@ -7,12 +7,12 @@ from glob import glob
 import os
 warnings.filterwarnings("ignore")
 from datetime import datetime, timedelta
-
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 def get_parameters():
     parser = argparse.ArgumentParser(description='Arrival_preprocessing')
-    parser.add_argument('--route_path', type=str, default='/usr/local/spark/resources/data/routes/routes.csv', help='path to route file')
-    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_30-11-22.csv', help='path to vehicle file')
+    parser.add_argument('--vehicle_path', type=str, default='/usr/local/spark/resources/data/vehicles/vehicles_2023-01-16.csv', help='path to vehicle file')
     parser.add_argument('--route_num_01', type=str, default= None, help='route number')
     parser.add_argument('--route_num_02', type=str, default= None, help='route number')
     parser.add_argument('--route_num_03', type=str, default= None, help='route number')
@@ -23,7 +23,14 @@ def get_parameters():
 args = get_parameters()
 
 # inputs
-routes = pd.read_csv(args.route_path)
+engine = create_engine("postgresql://divine:dv123456@192.168.242.73:5432/tsb")
+query = """
+select *
+from stations_gb
+"""
+routes = pd.read_sql(query, engine).drop('distance_km', axis=1)
+routes.rename(columns={'Route':'routes', 'Direction':'direction', 'Latitude':'lat', 'Longitude':'lon'}, inplace=True)
+
 vehicles = pd.read_csv(args.vehicle_path)
 
 # init

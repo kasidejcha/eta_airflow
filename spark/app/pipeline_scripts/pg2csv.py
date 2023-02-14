@@ -6,6 +6,8 @@ from glob import glob
 from datetime import datetime, timedelta
 import argparse
 import pickle
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 def get_parameters():
     parser = argparse.ArgumentParser(description='Arrival_preprocessing')
@@ -16,11 +18,16 @@ def get_parameters():
 
 # init
 args = get_parameters()
-route_path = '/usr/local/spark/resources/data/routes/routes.csv'
-vehicle_path = '/usr/local/spark/resources/data/vehicles/vehicles_30-11-22.csv'
+vehicle_path = '/usr/local/spark/resources/data/vehicles/vehicles_2023-01-16.csv'
 vender = 'sit'
+engine = create_engine("postgresql://divine:dv123456@192.168.242.73:5432/tsb")
 
-route = pd.read_csv(route_path)
+query = """
+select *
+from stations_gb
+"""
+route = pd.read_sql(query, engine).drop('distance_km', axis=1)
+route.rename(columns={'Route':'routes', 'Direction':'direction', 'Latitude':'lat', 'Longitude':'lon'}, inplace=True)
 vehicle = pd.read_csv(vehicle_path)
 all_route_list = route.routes.unique().tolist()
 
