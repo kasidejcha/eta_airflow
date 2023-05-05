@@ -37,7 +37,7 @@ def find_link_time(df, link_data):
     link.columns = ['id','master_link', 'start_station_num', 'end_station_num', 'routes','direction', 'PlateNo', 'link_time','link_timestamp']
 
     if len(link) != 0:
-        check = pd.concat([link, link.id.str.split('_',expand=True)],axis=1)
+        check = pd.concat([link, link.id.str.split('_', expand=True)],axis=1)
         c = pd.DataFrame(check.groupby('PlateNo')['link_timestamp'].max())
         threshold = (pd.to_datetime(c.max())-timedelta(minutes=30)).dt.strftime("%Y-%m-%d %H:%M:%S").iloc[0]
         c = c[c.link_timestamp > threshold].sort_values('link_timestamp').reset_index()
