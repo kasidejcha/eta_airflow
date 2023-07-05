@@ -5,16 +5,17 @@ from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+import sqlalchemy
 import redis
 import os
 import warnings
 warnings.filterwarnings("ignore")
 pd.set_option('display.max_columns', None)
 
-def load_mongo(time_path, limit_rows):
+def load_mongo(time_path, limit_rows, mongo_url):
     with open(time_path) as f:
         line = f.readlines()
-    myclient = pymongo.MongoClient("mongodb://147.50.147.204:27017")
+    myclient = pymongo.MongoClient(mongo_url)
     mydb = myclient.TSB
     mycol = mydb["MDVR"]
     if len(line) == 0:
@@ -75,18 +76,25 @@ def find_link_time(df):
 def link_timestamp_fn(link,time_path):
     check = pd.concat([link, link.id.str.split('_',expand=True)],axis=1)
     c = pd.DataFrame(check.groupby('PlateNo')['link_timestamp'].max())
-    threshold = (pd.to_datetime(c.max())-timedelta(minutes=15)).dt.strftime("%Y-%m-%d %H:%M:%S").iloc[0]
+    maxTime = pd.to_datetime(c.max())
+    minTime = pd.to_datetime(c.min())
+    threshold = (maxTime-timedelta(minutes=15)).dt.strftime("%Y-%m-%d %H:%M:%S").iloc[0]
     c = c[c.link_timestamp > threshold].sort_values('link_timestamp').reset_index()
     c = c.iloc[0]
     with open(time_path, 'w') as f:
         f.write(c.link_timestamp)
+    return threshold, maxTime.dt.strftime("%Y-%m-%d %H:%M:%S").iloc[0], minTime.dt.strftime("%Y-%m-%d %H:%M:%S").iloc[0]
 
 
 
 if __name__ == '__main__':
-    
+    eta_db_engine_string  = "postgresql://admin:admin@192.168.14.91:5431/eta"
     time_path = '/usr/local/spark/resources/data/tmp/mdvr_data/mdvr_time.txt'
-    df = load_mongo(time_path, limit_rows=100_000)
+    file_path = "/usr/local/spark/resources/data/tmp/mdvr_data/mdvr_link.csv"
+    mongo_url = "mongodb://147.50.147.204:27017"
+    current_time = (datetime.now()+ timedelta(hours=7)).strftime('%Y-%m-%d %H:%M:%S')
+    
+    df = load_mongo(time_path, limit_rows=100_000, mongo_url=mongo_url)
     print(df[['gpsTime']].sort_values('gpsTime', ascending=True).head())
     print(f'max: {df["gpsTime"].max()}')
     print(f'min: {df["gpsTime"].min()}')
@@ -94,39 +102,37 @@ if __name__ == '__main__':
         link = find_link_time(df)
         # print(link[['master_link', 'link_time', 'PlateNo', 'link_timestamp', 'upload_time']].sort_values('link_timestamp', ascending=True).head())
         if len(link)>0:
-            file_path = "/usr/local/spark/resources/data/tmp/mdvr_data/mdvr_link.csv"
-            if os.path.exists(file_path):
-                # filtered
-                old_link = pd.read_csv(file_path)
-                link = link[~link.id.isin(old_link.id.tolist())]
-                # print(f'filtered old_link: {link.sort_values("link_timestamp", ascending=True).head()}')
-                if len(link)>0:
-                    link = link.sort_values('link_timestamp').reset_index(drop=True)
-                    link_timestamp_fn(link, time_path)
-                    
-                    # save data
-                    link.to_csv(file_path, index=False, encoding='utf-8-sig')
-                    
-                    # upload to postgresql
-                    engine = create_engine("postgresql://admin:admin@192.168.14.91:5432/eta")
-                    db = scoped_session(sessionmaker(bind=engine))
-                    link.to_sql('mdvr_link_time', engine, if_exists='append', index=False)
-                    print(f"Output: {link.sort_values('link_timestamp', ascending=True).head()}")
-                    print('Upload link time complete')
-                else:
-                    print('No new link time: filter old link')
-            else:
-                link = link.sort_values('link_timestamp').reset_index(drop=True)
-                link_timestamp_fn(link, time_path)
-                
-                # save data
-                link.to_csv(file_path, index=False, encoding='utf-8-sig')
-                
-                # upload to postgresql
-                engine = create_engine("postgresql://admin:admin@192.168.14.91:5432/eta")
-                db = scoped_session(sessionmaker(bind=engine))
-                link.to_sql('mdvr_link_time', engine, if_exists='append', index=False)
-                print('Upload link time complete')
+            link = link.sort_values('link_timestamp').reset_index(drop=True)
+            threshold, maxTime, minTime = link_timestamp_fn(link, time_path)
+            print(f'threshold time: {threshold}')
+            print(f'maxTime time: {maxTime}')
+            print(f'minTime time: {minTime}')
+            
+            # save data
+            link.to_csv(file_path, index=False, encoding='utf-8-sig')
+            
+            # upload to postgresql
+            engine = create_engine(eta_db_engine_string)
+            pg = pd.read_sql(f"""
+            SELECT *
+            FROM link_time
+            WHERE link_timestamp BETWEEN CAST('{minTime}' AS timestamp) - INTERVAL '1 hour'
+                                    AND CAST('{maxTime}' AS timestamp);
+            """, engine)
+            print(f"Before drop duplicate: {len(link)}")
+            link = link[~link.id.isin(pg.id.tolist())].reset_index(drop=True)
+            print(f"After drop duplicate: {len(link)}")
+            link_dtypes = {
+                'id': sqlalchemy.String,
+                'master_link': sqlalchemy.String,
+                'link_time': sqlalchemy.Float,
+                'PlateNo': sqlalchemy.String,
+                'link_timestamp': sqlalchemy.TIMESTAMP,
+                'upload_timestamp': sqlalchemy.TIMESTAMP
+            }
+            link.to_sql('link_time', engine, if_exists='append', index=False, dtype = link_dtypes)
+            print(f"Output: {link.sort_values('link_timestamp', ascending=True).head()}")
+            print('Upload link time complete')
         else:
             print('No new link time: find_link_time')
     else:

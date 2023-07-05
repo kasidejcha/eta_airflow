@@ -2,24 +2,20 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime, timedelta
 from airflow.operators import BashOperator
+from airflow.utils.dates import days_ago
 
 ###############################################
 # Parameters
 ###############################################
-postgres_driver_jar = "/usr/local/spark/resources/jars/postgresql-9.4.1207.jar"
-postgres_db = "jdbc:postgresql://postgres/test"
-postgres_user = "test"
-postgres_pwd = "postgres"
+
 
 ###############################################
 # DAG Definition
 ###############################################
-now = datetime.now()
 
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
-    "start_date": datetime(now.year, now.month, now.day),
     "email": ["airflow@airflow.com"],
     "email_on_failure": False,
     "email_on_retry": False,
@@ -28,19 +24,19 @@ default_args = {
 }
 
 dag = DAG(
-        dag_id="Arrival_Time_Preprocess_thaistar_1-24E_1-17_1-18E",
-        description="Arrival Time Preprocess",
+        dag_id="pg_partition",
+        description="create postgresql partitions",
         default_args=default_args,
-        schedule_interval='@once'
+        start_date = days_ago(1),
+        schedule_interval='@daily',
+        max_active_runs=1,
+        catchup=False
     )
 
-
-
-arrival_time = BashOperator(
-    task_id = 'arrival_time',
-    bash_command = 'python /usr/local/spark/app/pipeline_scripts/arrival_pipeline_thaistar_daily.py --route_num_01 "1-24E(538)" --route_num_02 "1-17(187)" --route_num_03 "1-18E(504)"',
+partition = BashOperator(
+    task_id = 'partition',
+    bash_command = 'python /usr/local/spark/app/MDVR/create_partition.py',
     dag = dag
-)
+    )
 
-
-arrival_time
+partition
