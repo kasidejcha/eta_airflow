@@ -26,6 +26,7 @@ def load_mongo(time_path, limit_rows, mongo_url):
         time = line[0]
         i = mycol.find({'gpsTime':{'$gte': time}}).sort('gpsTime').limit(limit_rows)
         df = pd.DataFrame(i)
+        print(f'fetch_length: {len(df)}')
         df['gpsTime'] = df['gpsTime'].apply(convert_datetime)
         df = df[pd.to_datetime(df.gpsTime) >= pd.to_datetime(time)]
         print(f'time: {time}')
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     time_path = '/usr/local/spark/resources/data/tmp/mdvr_data/mdvr_time.txt'
     file_path = "/usr/local/spark/resources/data/tmp/mdvr_data/mdvr_link.csv"
     mongo_url = "mongodb://147.50.147.204:27017"
-    current_time = (datetime.now()+ timedelta(hours=7)).strftime('%Y-%m-%d %H:%M:%S')
+    # current_time = (datetime.now()+ timedelta(hours=7)).strftime('%Y-%m-%d %H:%M:%S')
     
     df = load_mongo(time_path, limit_rows=100_000, mongo_url=mongo_url)
     print(df[['gpsTime']].sort_values('gpsTime', ascending=True).head())
@@ -128,7 +129,7 @@ if __name__ == '__main__':
                 'link_time': sqlalchemy.Float,
                 'PlateNo': sqlalchemy.String,
                 'link_timestamp': sqlalchemy.TIMESTAMP,
-                'upload_timestamp': sqlalchemy.TIMESTAMP
+                'upload_time': sqlalchemy.TIMESTAMP
             }
             link.to_sql('link_time', engine, if_exists='append', index=False, dtype = link_dtypes)
             print(f"Output: {link.sort_values('link_timestamp', ascending=True).head()}")
